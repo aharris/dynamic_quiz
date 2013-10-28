@@ -27,10 +27,10 @@ var questions = [
   {
     question: "What is my birthday?",
     choices : [
-      24,
-      28,
-      18,
-      16
+      "24",
+      "28",
+      "18",
+      "16"
     ],
     correctAnswer: 1
   }
@@ -59,14 +59,14 @@ var getQuestion = function() {
     radioBtn = "<input type='radio' name='group1' value='" + choiceVal + "'>" + choiceVal + "<br>";
 
     $('form').append(radioBtn);
-  };
+  }
 
 };
 
 var getNextQuestion = function() {
   $('button').on('click', function(){
+    score();
     if(idx < totalQuestions - 1){
-      score();
       idx++;
       getQuestion();
     } else {
@@ -84,7 +84,7 @@ var score = function() {
   }
 
   console.log(numberCorrect);
-}
+};
 
 
 
