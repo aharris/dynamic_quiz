@@ -1,0 +1,34 @@
+{
+  "questions" : [
+    {
+      "question": "Who is the father on the simpsons",
+      "choices" : [
+        "Homer",
+        "Bart",
+        "Burt Reynolds",
+        "Chocolate"
+      ],
+      "correctAnswer": "Homer"
+    },
+    {
+      "question": "What is my name?",
+      "choices" : [
+        "Ashton",
+        "Donelle",
+        "Killa Cam",
+        "Vanilla Bear"
+      ],
+      "correctAnswer": "Ashton"
+    },
+    {
+      "question": "What is my birthday?",
+      "choices" : [
+        24,
+        28,
+        18,
+        16
+      ],
+      "correctAnswer": 28
+    }
+  ]
+}
