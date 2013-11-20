@@ -13,21 +13,29 @@
         <link rel="stylesheet" href="stylesheets/screen.css">
     </head>
     <body class="yui3-normalized">
-        <h1>Dynamic Quiz</h1>
-        <h2 id="welcome"></h2>
+        <div id="content"></div>
+        <script id="layout" type="text/x-handlebars-template">
 
-        <a id="back" href="#">Go Back</a>
+            <h1>{{title}}</h1>
+            <h2 id="welcome">{{welcomeMessage}}</h2>
 
-        <div id="questions"
+            <a id="back" href="#">Go Back</a>
 
-            <h2>Question #<span id="question-number"></span> of <span id="total-questions"></span></h2>
+            <div id="questions">
 
-            <h3 id="question"></h3>
-            <form>
-            </form>
-            <button id="next">Next Question</button>
-        </div>
+                <h2>Question #<span id="question-number"></span> of <span id="total-questions"></span></h2>
+
+                <h3 id="question"></h3>
+                <form>
+                </form>
+                <button id="next">Next Question</button>
+
+            </div>
+
+        </script>
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script src="scripts/handlebars-v1.1.2.js"></script>
+        <script src="scripts/layout.js"></script>
         <script type="text/json" src="scripts/data.json"></script>
         <script src="scripts/application.js"></script>
 

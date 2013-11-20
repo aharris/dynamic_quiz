@@ -1,5 +1,6 @@
+(function() {
 $(document).ready(function(){
-  login();
+  createLayout();
   fetchData();
   getQuestion();
   getNextQuestion();
@@ -7,17 +8,36 @@ $(document).ready(function(){
   saveAnswers();
 });
 
+var questionEl;
+
+var createLayout = function () {
+
+  var source = $('#layout').html();
+  var template = Handlebars.compile(source);
+
+  var context = {
+    title: "Dynamic Quiz",
+    welcomeMessage : "Welcome " + login()
+  };
+  var html = template(context);
+
+  document.body.innerHTML = html;
+
+  questionEl = $('#questions');
+
+};
+
 var name;
 
-var login = function () {
+function login () {
   if(!docCookies.hasItem('name')) {
     name = prompt('Enter Name');
-    docCookies.setItem('name', name)
+    docCookies.setItem('name', name);
   } else {
     name = docCookies.getItem('name');
-    document.getElementById('welcome').innerText = 'Welcome ' + name;
+    return name;
   }
-};
+}
 
 var fetchData = function () {
     var req = new XMLHttpRequest();
@@ -28,8 +48,7 @@ var fetchData = function () {
 
 var idx = 0,
   questions = fetchData().questions,
-  totalQuestions = questions.length
-  questionEl = $('#questions');
+  totalQuestions = questions.length;
 
 var numberCorrect = 0;
 
@@ -37,7 +56,7 @@ $('#total-questions').text(totalQuestions);
 
 var saveAnswers = function () {
   questions[idx].givenAnswer = $("input[type='radio']:checked").val();
-}
+};
 
 var getQuestion = function() {
   questionEl.fadeOut("slow", function () {
@@ -155,7 +174,7 @@ var docCookies = {
     return aKeys;
   }
 };
-
+})();
 
 
 
