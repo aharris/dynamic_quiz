@@ -1,179 +1,231 @@
 (function() {
-$(document).ready(function(){
-  createLayout();
-  fetchData();
-  getQuestion();
-  getNextQuestion();
-  goBack();
-  saveAnswers();
-});
+  $(document).ready(function(){
+    createLayout();
+    fetchData();
+    getQuestion();
+    getNextQuestion();
+    goBack();
+    saveAnswers();
+  });
 
-var questionEl;
+  var questionEl,
+  name,
+  idx = 0,
+  questions = fetchData().questions,
+  totalQuestions = questions.length,
+  numberCorrect = 0;
 
-var createLayout = function () {
+  function createLayout() {
 
-  var source = $('#layout').html();
-  var template = Handlebars.compile(source);
+    var source = $('#layout').html(),
+    template = Handlebars.compile(source),
+    context,
+    html;
 
-  var context = {
-    title: "Dynamic Quiz",
-    welcomeMessage : "Welcome " + login()
+    context = {
+      title: "Dynamic Quiz",
+      welcomeMessage : "Welcome " + login()
+    };
+
+    html = template(context);
+
+    document.body.innerHTML = html;
+
+    questionEl = $('#questions');
+
   };
-  var html = template(context);
 
-  document.body.innerHTML = html;
-
-  questionEl = $('#questions');
-
-};
-
-var name;
-
-function login () {
-  if(!docCookies.hasItem('name')) {
-    name = prompt('Enter Name');
-    docCookies.setItem('name', name);
-  } else {
-    name = docCookies.getItem('name');
+  function login() {
+    // if(!docCookies.hasItem('name')) {
+      name = prompt('Enter Name');
+      docCookies.setItem('name', name);
+    // } else {
+    //   name = docCookies.getItem('name');
     return name;
+    // }
   }
-}
 
-var fetchData = function () {
+  function User(name, score) {
+    this.name = name;
+    this.score = score;
+  }
+
+  User.prototype = {
+    constructor : User,
+    saveNameAndScore : function() {
+      return {
+        userName : this.name,
+        userScore : this.score
+      };
+    }
+  };
+
+  function getScores() {
+
+    var userScores = [];
+
+    if(localStorage.names) {
+
+      localStorageArray = JSON.parse(localStorage.names);
+
+      if (localStorageArray.length > 0) {
+        for (var i = 0; i < localStorageArray.length; i++) {
+          userScores.push(localStorageArray[i]);
+        }
+      }
+
+      userScores.push(new User(name, numberCorrect));
+      localStorage.names = JSON.stringify(userScores);
+
+    } else {
+
+      userScores.push(new User(name, numberCorrect));
+      localStorage.names = JSON.stringify(userScores);
+
+    }
+
+    $('#scores').show();
+
+    for (var i = 0; i < userScores.length; i++) {
+
+      $('#scores').append('<li>User: ' + userScores[i].name + ', Score: ' + userScores[i].score + '</li>');
+      // console.log('User: ' + userScores[i].name);
+      // console.log('score: ' + userScores[i].score);
+    }
+
+  }
+
+  function fetchData() {
     var req = new XMLHttpRequest();
     req.open("GET", "scripts/data.json", false);
     req.send(null);
     return JSON.parse(req.responseText);
-};
+  };
 
-var idx = 0,
-  questions = fetchData().questions,
-  totalQuestions = questions.length;
 
-var numberCorrect = 0;
+  $('#total-questions').text(totalQuestions);
 
-$('#total-questions').text(totalQuestions);
+  function saveAnswers() {
+    questions[idx].givenAnswer = $("input[type='radio']:checked").val();
+  };
 
-var saveAnswers = function () {
-  questions[idx].givenAnswer = $("input[type='radio']:checked").val();
-};
+  function getQuestion() {
+    questionEl.fadeOut("fast", function () {
+      $('form').empty();
 
-var getQuestion = function() {
-  questionEl.fadeOut("slow", function () {
-    $('form').empty();
-
-    var getCurrentQuestion = questions[idx],
+      var getCurrentQuestion = questions[idx],
       question = questions[idx].question,
       choices = questions[idx].choices;
 
-    $('#question-number').text(idx + 1);
-    $('#question').text(question);
+      $('#question-number').text(idx + 1);
+      $('#question').text(question);
 
-    for(var i = 0; i < choices.length; i++) {
+      for(var i = 0; i < choices.length; i++) {
 
-      var choiceVal = choices[i],
-      selectedRadioBtn = "<input type='radio' name='group1' value='" + choiceVal + "' checked='true' >" + choiceVal + "<br>";
-      radioBtn = "<input type='radio' name='group1' value='" + choiceVal + "'>" + choiceVal + "<br>";
+        var choiceVal = choices[i],
+        selectedRadioBtn = "<input type='radio' name='group1' value='" + choiceVal + "' checked='true' >" + choiceVal + "<br>",
+        radioBtn = "<input type='radio' name='group1' value='" + choiceVal + "'>" + choiceVal + "<br>";
 
-      if (questions[idx].givenAnswer === choices[i]) {
-        $('form').append(selectedRadioBtn);
-      } else {
-        $('form').append(radioBtn);
+        if (questions[idx].givenAnswer === choices[i]) {
+          $('form').append(selectedRadioBtn);
+        } else {
+          $('form').append(radioBtn);
+        }
       }
-    }
-  });
-  questionEl.fadeIn("slow");
+    });
+    questionEl.fadeIn("fast");
 
-};
+  };
 
-var getNextQuestion = function() {
-  $('button').on('click', function(){
-    if ($("input[type='radio']:checked").val()) {
+  function getNextQuestion() {
+    $('button').on('click', function(){
+      if ($("input[type='radio']:checked").val()) {
+        saveAnswers();
+        if(idx < totalQuestions - 1){
+          idx++;
+          getQuestion();
+        } else {
+          score();
+          $('#questions').text('You got ' + numberCorrect + ' out of ' + totalQuestions + ' !');
+          getScores();
+        }
+      } else {
+        alert("Please enter an answer");
+      }
+    });
+  };
+
+  function goBack() {
+    $('#back').on('click', function(e){
       saveAnswers();
-      if(idx < totalQuestions - 1){
-        idx++;
-        getQuestion();
-      } else {
-        score();
-        $('#questions').text('You got ' + numberCorrect + ' out of ' + totalQuestions + ' !');
-      }
-    } else {
-      alert("Please enter an answer");
-    }
-  });
-};
+      e.preventDefault();
+      getPreviousQuestion();
+    });
+  };
 
-var goBack = function () {
-  $('#back').on('click', function(e){
-    saveAnswers();
-    e.preventDefault();
-    getPreviousQuestion();
-  });
-};
-
-var getPreviousQuestion = function () {
-  if (idx > 0) {
-    idx--;
-    getQuestion();
-  }
-};
-
-var score = function() {
-  var answer = $("input[type='radio']:checked").val();
-
-  for (var i = 0; i < totalQuestions; i++) {
-    var correctAnswer = questions[i].correctAnswer ? questions[i].correctAnswer : null;
-    var givenAnswer = questions[i].givenAnswer ? questions[i].givenAnswer : null;
-
-    if (correctAnswer && givenAnswer) {
-      if(correctAnswer.toString() === givenAnswer.toString()){
-        numberCorrect++;
-      }
+  function getPreviousQuestion() {
+    if (idx > 0) {
+      idx--;
+      getQuestion();
     }
   };
 
-  console.log(numberCorrect);
-};
+  function score() {
+    var answer = $("input[type='radio']:checked").val();
 
-var docCookies = {
-  getItem: function (sKey) {
-    return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
-  },
-  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
-    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return false; }
-    var sExpires = "";
-    if (vEnd) {
-      switch (vEnd.constructor) {
-        case Number:
+    for (var i = 0; i < totalQuestions; i++) {
+      var correctAnswer = questions[i].correctAnswer ? questions[i].correctAnswer : null,
+      givenAnswer = questions[i].givenAnswer ? questions[i].givenAnswer : null;
+
+      if (correctAnswer && givenAnswer) {
+        if(correctAnswer.toString() === givenAnswer.toString()){
+          numberCorrect++;
+        }
+      }
+    };
+
+    console.log(numberCorrect);
+  };
+
+  var docCookies = {
+    getItem: function (sKey) {
+      return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
+    },
+    setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
+      if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return false; }
+      var sExpires = "";
+      if (vEnd) {
+        switch (vEnd.constructor) {
+          case Number:
           sExpires = vEnd === Infinity ? "; expires=Fri, 31 Dec 9999 23:59:59 GMT" : "; max-age=" + vEnd;
           break;
-        case String:
+          case String:
           sExpires = "; expires=" + vEnd;
           break;
-        case Date:
+          case Date:
           sExpires = "; expires=" + vEnd.toUTCString();
           break;
+        }
       }
+      document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
+      return true;
+    },
+
+
+    removeItem: function (sKey, sPath, sDomain) {
+      if (!sKey || !this.hasItem(sKey)) { return false; }
+      document.cookie = encodeURIComponent(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + ( sDomain ? "; domain=" + sDomain : "") + ( sPath ? "; path=" + sPath : "");
+      return true;
+    },
+    hasItem: function (sKey) {
+      return (new RegExp("(?:^|;\\s*)" + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
+    },
+    keys: /* optional method: you can safely remove it! */ function () {
+      var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+      for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = decodeURIComponent(aKeys[nIdx]); }
+        return aKeys;
     }
-    document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
-    return true;
-  },
-
-
-  removeItem: function (sKey, sPath, sDomain) {
-    if (!sKey || !this.hasItem(sKey)) { return false; }
-    document.cookie = encodeURIComponent(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + ( sDomain ? "; domain=" + sDomain : "") + ( sPath ? "; path=" + sPath : "");
-    return true;
-  },
-  hasItem: function (sKey) {
-    return (new RegExp("(?:^|;\\s*)" + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
-  },
-  keys: /* optional method: you can safely remove it! */ function () {
-    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-    for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = decodeURIComponent(aKeys[nIdx]); }
-    return aKeys;
-  }
-};
+  };
 })();
 
 
